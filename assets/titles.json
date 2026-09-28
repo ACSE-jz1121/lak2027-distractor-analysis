@@ -1,0 +1,10 @@
+{
+ "S0": ["Sign errors with negative numbers", "负数运算中的符号错误"],
+ "S1": ["Fraction representation and equivalence errors", "分数表示与等值错误"],
+ "S2": ["No coherent candidate: mixed symmetry, shape-property and construction items", "无连贯候选：对称、图形性质与作图混合题"],
+ "S3": ["No coherent candidate: mixed arithmetic and operation items", "无连贯候选：混合的算术与运算题"],
+ "S4": ["Area and perimeter errors on shapes", "图形面积与周长错误"],
+ "S5": ["Coordinate order, sign and transformation errors", "坐标顺序、符号与图形变换错误"],
+ "S6": ["Judging angle size from the diagram", "按图目测角的大小"],
+ "S7": ["Confusing factors and multiples", "混淆因数与倍数"]
+}

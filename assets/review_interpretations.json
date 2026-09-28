@@ -1,0 +1,89 @@
+{
+ "_meta": {
+  "generator": "Claude Opus 5.5 (claude-opus-5-5)",
+  "input": "results/semantic_audit_qwen3_8b/review_evidence_packs/S*.json: the 15 centroid-nearest representative distractors (question, correct answer, chosen distractor, response statistics) and group-level learner-response summaries. No external misconception-bank information was provided.",
+  "citation_rule": "Every substantive claim cites at least one representative distractor (e1-e15). Citations are checked by make_review_workspace.py.",
+  "language": "Descriptive and cautious: candidate error patterns observed in distractor choices, not diagnoses of individual learners."
+ },
+ "S0": {
+  "theme": "Sign errors with negative numbers",
+  "summary": "The distractors in this group involve calculating with and comparing negative numbers. The chosen answers are consistent with dropping, reversing or misapplying a sign.",
+  "claims": [
+   {"text": "Subtracting a negative number is treated like subtracting a positive one: −9 is chosen for (−2) − (−7) and −13 for (−8) − (−5).", "examples": ["e2", "e15"]},
+   {"text": "a − b and b − a are judged to be equal, as if the order of subtraction did not affect the sign.", "examples": ["e1", "e10"]},
+   {"text": "In missing-number items the chosen value has the wrong sign, for example −3 for (−5) + □ = 2, −1 for (−3) + □ = 2 and +4 for −5 □ = −9.", "examples": ["e8", "e14", "e6"]},
+   {"text": "When a negative value is substituted, −a − (−b) is chosen instead of −a − b.", "examples": ["e5", "e11"]},
+   {"text": "Sign rules for products are also involved: (−5) × 9 = −45 is judged incorrect rather than (−5) × (−9) = −45.", "examples": ["e13"]}
+  ]
+ },
+ "S1": {
+  "theme": "Fraction representation and equivalence errors",
+  "summary": "Most distractors involve naming fractions shown in diagrams and rewriting decimals or products as fractions. The chosen answers take several different forms, which is why the evidence for a single pattern is mixed.",
+  "claims": [
+   {"text": "When a fraction is read from a diagram, the chosen fraction often has a different denominator from the correct one, for example 4/6 instead of 4/3, 6/8 instead of 6/4 and 8/12 instead of 8/9.", "examples": ["e1", "e4", "e13"]},
+   {"text": "Some chosen fractions are one part out: 1/4 instead of 1/5 and 1/5 instead of 1/6.", "examples": ["e2", "e3"]},
+   {"text": "When decimals are written as a product of fractions, the digits are split instead of the values being converted: 2/4 × 3/2 for 2.4 × 3.2 and 1/2 × 2/5 for 1.2 × 2.5.", "examples": ["e8", "e10"]},
+   {"text": "Missing-factor items attract answers that do not satisfy the equation, such as 3/10 for 3/5 × ? = 1/2 and 2 for 3/5 × ? = 1.", "examples": ["e5", "e6"]}
+  ]
+ },
+ "S2": {
+  "theme": "Mixed symmetry, shape-property and construction errors",
+  "summary": "No single coherent error was identified. The distractors combine several kinds of geometry question: classifying quadrilaterals, rotational symmetry, lines of symmetry and constructions.",
+  "claims": [
+   {"text": "Several distractors involve classifying quadrilaterals, for example treating a parallelogram as a rhombus or not accepting that a square is a parallelogram.", "examples": ["e3", "e7", "e8"]},
+   {"text": "Other distractors concern the order of rotational symmetry of quadrilaterals and triangles.", "examples": ["e4", "e9"]},
+   {"text": "Line-of-symmetry items form a separate subgroup whose answer options appear only in the diagrams.", "examples": ["e1", "e2"]},
+   {"text": "Construction and line-segment items (whether segments are parallel or of equal length) form further, separate question types.", "examples": ["e5", "e6", "e11", "e15"]}
+  ]
+ },
+ "S3": {
+  "theme": "Mixed arithmetic and operation errors",
+  "summary": "No single coherent error was identified. The group mixes order-of-operations and bracket errors with multiplication models and other arithmetic statements.",
+  "claims": [
+   {"text": "Several distractors accept expressions that ignore brackets or the order of operations, such as 7 × 8 + 2 for 7 × (8 + 2), or leaving 4 + 5 × 2 without brackets to obtain 18.", "examples": ["e1", "e6", "e7", "e9"]},
+   {"text": "Distributing multiplication over addition is rejected when it is correct, as in 7 × (2 + 3) = 7 × 2 + 7 × 3.", "examples": ["e2", "e8"]},
+   {"text": "Other items ask which repeated multiplication a diagram represents; the chosen answer reverses the grouping.", "examples": ["e5", "e13"]},
+   {"text": "Further items concern powers and translating a sequence of operations into an expression.", "examples": ["e11", "e10"]}
+  ]
+ },
+ "S4": {
+  "theme": "Area and perimeter errors",
+  "summary": "The distractors mostly come from finding the area of shapes on a grid and of compound rectilinear shapes. The chosen answers are consistent with counting or combining parts of the shape incorrectly.",
+  "claims": [
+   {"text": "For shapes drawn on a grid, several chosen areas are double the correct area (6 for 3, 10 for 5), consistent with not halving a triangular part.", "examples": ["e1", "e3"]},
+   {"text": "For compound rectilinear shapes, the chosen areas are larger than the correct ones (154 cm² for 124 cm², 52 cm² for 42 cm², 72 cm² for 42 cm²), consistent with combining the parts incorrectly.", "examples": ["e4", "e5", "e13"]},
+   {"text": "Perimeter items for compound shapes attract answers that are too small (46 cm for 54 cm, 24 cm for 34 cm), consistent with omitting sides whose lengths are not labelled.", "examples": ["e11", "e12"]},
+   {"text": "For rectangles, the chosen value matches the perimeter rather than the area in some items (34 cm² for 60 cm², 32 cm² for 48 cm²).", "examples": ["e10", "e15"]}
+  ]
+ },
+ "S5": {
+  "theme": "Coordinate order, sign and geometric transformation errors",
+  "summary": "The distractors involve reading and using coordinates. Many chosen answers swap the x and y values, and in reflection items the chosen point stays on the mirror line.",
+  "claims": [
+   {"text": "When reading a marked point, the chosen coordinates are in reversed order, for example (−2, −3) for (−3, −2), (2, −4) for (−4, 2) and (−2, 4) for (4, −2).", "examples": ["e1", "e3", "e8"]},
+   {"text": "Points on an axis are reversed in the same way: (0, −2) for (−2, 0) and (−3, 0) for (0, −3).", "examples": ["e4", "e5"]},
+   {"text": "After a reflection in a horizontal or vertical line, the chosen point lies on the mirror line itself, for example (2, 4) after reflecting in y = 4 and (5, 6) after reflecting in x = 5.", "examples": ["e2", "e7", "e10"]},
+   {"text": "Items that ask for a missing vertex of a square or rectangle also attract incorrect vertices.", "examples": ["e6", "e9", "e12"]}
+  ]
+ },
+ "S6": {
+  "theme": "Visual estimation of angle size",
+  "summary": "The distractors ask for the size of a marked angle. The chosen answers are often close to the correct size or equal to its supplement, consistent with estimating the angle from the diagram rather than calculating it.",
+  "claims": [
+   {"text": "Many chosen answers are within about 10° of the correct angle, for example 45° for 55°, 55° for 45° and 65° for 61°.", "examples": ["e1", "e4", "e7"]},
+   {"text": "Some chosen answers equal the supplement of the correct angle: 45° for 135°, 35° for 145° and 52° for 128°.", "examples": ["e6", "e8", "e11"]},
+   {"text": "When the angle can be calculated from the information given, “Not enough information” is sometimes chosen.", "examples": ["e3", "e14", "e15"]}
+  ]
+ },
+ "S7": {
+  "theme": "Confusion between factors and multiples",
+  "summary": "The distractors are statements about factors, common factors and multiples. The chosen answers reject correct factor statements or accept incorrect ones, consistent with confusing factors and multiples.",
+  "claims": [
+   {"text": "Correct statements that 1 is a factor of a number are rejected, for 12 and for 9.", "examples": ["e4", "e5"]},
+   {"text": "Factors of a number written in prime-factor form are misjudged, such as rejecting that 6 is a factor of 2² × 3³ × 5² or accepting that 8 is.", "examples": ["e1", "e9"]},
+   {"text": "When asked which number is not a factor, an actual factor is chosen (4 for 12, 9 for 36).", "examples": ["e14", "e11"]},
+   {"text": "When asked which number has 3, 9 and 18 as factors, 3 is chosen instead of 18, reversing the relation between a number and its factors.", "examples": ["e15"]},
+   {"text": "Statements about common factors and common multiples are also misjudged.", "examples": ["e3", "e6", "e13"]}
+  ]
+ }
+}

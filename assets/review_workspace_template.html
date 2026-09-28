@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Candidate Error Review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f6f4; --panel:#ffffff; --ink:#1b1f24; --ink2:#3f4652; --muted:#6a7280; --faint:#8b929c; --line:#e2e4e8; --line2:#eceef1;
+  --accent:#2f5d8c; --accent-bg:#edf3fa; --accent-line:#9db9d6;
+  --ok:#2d6a48; --ok-bg:#e9f3ec; --ok-line:#b9d6c3;
+  --warn:#8a5a00; --warn-bg:#fbf2df; --warn-line:#e9cf96;
+  --neu:#4b5361; --neu-bg:#eef0f3; --neu-line:#cfd4db;
+  --bad:#9a3434; --bad-bg:#fbefef; --bad-line:#e2b3b3;
+  --hl:#fff6d9; --hl-line:#c9a227;
+  --r:10px; --shadow:0 1px 2px rgba(20,24,30,.05);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:15px;line-height:1.5}
+button{font:inherit;color:inherit}
+a{color:var(--accent)}
+.appbar{background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.appbar .in{max-width:1440px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:24px}
+.brand{font-weight:600;font-size:16px}
+.brand small{display:block;font-weight:400;color:var(--muted);font-size:12.5px}
+.tabs{margin-left:auto;display:flex;gap:4px}
+.tab{border:1px solid transparent;background:none;padding:7px 12px;border-radius:8px;cursor:pointer;color:var(--ink2);font-size:14px}
+.tab[aria-selected=true]{background:var(--accent-bg);border-color:var(--accent-line);color:var(--accent);font-weight:600}
+.shell{max-width:1440px;margin:0 auto;display:grid;grid-template-columns:268px minmax(0,1fr);gap:24px;padding:20px 24px 60px}
+.side{position:sticky;top:74px;align-self:start}
+.side h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:4px 0 10px;font-weight:600}
+.glist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.gitem{width:100%;text-align:left;background:none;border:1px solid transparent;border-radius:8px;padding:8px 10px;cursor:pointer;display:grid;grid-template-columns:30px 1fr;gap:2px 8px;align-items:start}
+.gitem:hover{background:var(--panel);border-color:var(--line)}
+.gitem[aria-current=true]{background:var(--panel);border-color:var(--accent-line);box-shadow:var(--shadow)}
+.gitem .gid{font-weight:600;color:var(--ink2);font-size:13.5px}
+.gitem .gname{font-size:13.5px;color:var(--ink);line-height:1.3}
+.gitem .gmeta{grid-column:2;display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:3px}
+.mini{font-size:11.5px;color:var(--muted)}
+.main{min-width:0;max-width:1140px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.status{display:inline-flex;align-items:center;gap:6px;border:1px solid;border-radius:6px;padding:2px 9px;font-size:12.5px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap}
+.status .ic{font-size:13px;line-height:1}
+.st-supported{color:var(--ok);background:var(--ok-bg);border-color:var(--ok-line)}
+.st-partial{color:var(--warn);background:var(--warn-bg);border-color:var(--warn-line)}
+.st-notcoherent{color:var(--neu);background:var(--neu-bg);border-color:var(--neu-line)}
+.status.sm{font-size:10.5px;padding:1px 6px}
+/* header */
+.head{padding:20px 24px 18px}
+.kicker{font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.titlerow{display:flex;align-items:flex-start;gap:14px;margin-top:4px}
+.titlerow h1{font-size:25px;line-height:1.25;margin:0;font-weight:600;letter-spacing:-.01em}
+.titlerow .right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-shrink:0;padding-top:4px}
+.why{position:relative}
+.why>summary{list-style:none;cursor:pointer;font-size:13px;color:var(--accent);padding:2px 4px;border-radius:4px}
+.why>summary::-webkit-details-marker{display:none}
+.why>summary::after{content:" ▾"}
+.why[open]>summary::after{content:" ▴"}
+.why .pop{position:absolute;right:0;top:28px;width:390px;z-index:15;padding:14px 16px}
+.profile-line{margin-top:10px;font-size:15px;color:var(--ink2)}
+.profile-line b{color:var(--ink);font-weight:600}
+.meta{margin-top:8px;font-size:13px;color:var(--muted);display:flex;gap:16px;flex-wrap:wrap}
+.caution{margin-top:14px;border:1px solid;border-radius:8px;padding:9px 12px;font-size:14px;display:flex;gap:10px;align-items:flex-start}
+.caution.partial{background:var(--warn-bg);border-color:var(--warn-line);color:#5d3d00}
+.caution.notcoherent{background:var(--neu-bg);border-color:var(--neu-line);color:#343b46}
+.auditbadge{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ok);border:1px solid var(--ok-line);background:#f6faf7;border-radius:6px;padding:2px 8px;cursor:pointer}
+.auditbadge.fail{color:var(--bad);border-color:var(--bad-line);background:var(--bad-bg)}
+/* two-column */
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;margin-top:18px}
+.sec{padding:18px 20px}
+.sec h2{margin:0 0 2px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.sec .sub{font-size:12.5px;color:var(--faint);margin-bottom:12px}
+.summary{font-size:16px;line-height:1.55;margin:4px 0 16px;color:var(--ink)}
+.claims{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;counter-reset:c}
+.claim{border:1px solid var(--line2);border-radius:8px;padding:10px 12px 10px 38px;position:relative;font-size:15px;line-height:1.5;transition:background .15s,border-color .15s}
+.claim::before{counter-increment:c;content:counter(c);position:absolute;left:12px;top:10px;width:18px;height:18px;border-radius:50%;background:var(--line2);color:var(--ink2);font-size:11.5px;font-weight:600;display:flex;align-items:center;justify-content:center}
+.claim.lit{background:var(--accent-bg);border-color:var(--accent-line)}
+.chips{display:inline-flex;gap:5px;flex-wrap:wrap;margin-left:4px;vertical-align:1px}
+.chip{border:1px solid var(--accent-line);background:#fff;color:var(--accent);border-radius:5px;padding:0 7px;font-size:13px;font-weight:600;cursor:pointer;line-height:21px;font-variant-numeric:tabular-nums}
+.chip:hover,.chip:focus-visible,.chip.on{background:var(--accent);color:#fff;border-color:var(--accent);outline:none}
+.evlist{display:flex;flex-direction:column;gap:10px}
+.evscroll{max-height:calc(100vh - 150px);overflow:auto;padding-right:4px;margin-right:-4px}
+.ex{border:1px solid var(--line);border-radius:8px;padding:11px 13px;background:#fff;transition:box-shadow .15s,border-color .15s,background .15s;scroll-margin:12px}
+.ex.lit{border-color:var(--accent);box-shadow:0 0 0 3px rgba(47,93,140,.18);background:#fbfdff}
+.ex .exhead{display:flex;align-items:baseline;gap:8px;margin-bottom:6px}
+.ex .eid{font-weight:700;color:var(--accent);font-size:13.5px}
+.ex .topic{font-size:12px;color:var(--faint);margin-left:auto;text-align:right}
+.ex .q{font-size:14.5px;line-height:1.45;margin-bottom:8px}
+.ans{display:grid;grid-template-columns:132px 1fr;gap:4px 8px;font-size:14px;align-items:start}
+.ans .lab{font-size:12px;color:var(--muted);padding-top:3px}
+.ans .val{border-radius:5px;padding:2px 8px;border-left:3px solid}
+.ans .val.correct{background:#f1f8f3;border-color:#6aa382;color:#1f4d33}
+.ans .val.wrong{background:var(--bad-bg);border-color:#c46a6a;color:#6f1f1f;font-weight:600}
+.exfoot{margin-top:7px;font-size:12px;color:var(--faint);display:flex;gap:12px;flex-wrap:wrap}
+.cited{font-size:12px;color:var(--accent)}
+.imgbtn{border:none;background:none;color:var(--accent);font-size:12px;cursor:pointer;padding:0}
+.ex img{max-width:100%;border:1px solid var(--line);border-radius:6px;margin-top:8px;display:block}
+.more{margin-top:10px;border:1px dashed var(--accent-line);background:none;border-radius:8px;padding:8px;width:100%;color:var(--accent);cursor:pointer;font-size:13.5px}
+/* profile */
+.profile{margin-top:18px;padding:18px 20px}
+.profile .ph{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.pgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:12px}
+.pbig{font-size:22px;font-weight:600;margin-top:6px;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:10px}
+.pbig.sm{font-size:16px;display:block;line-height:1.45}.pbig span{font-size:13px;font-weight:400;color:var(--muted)}.pbig svg+span{font-size:22px;font-weight:600;color:var(--ink)}
+.pfact{font-size:13.5px;color:var(--ink2);margin-top:6px;line-height:1.45}
+.pcmp{font-size:12.5px;color:var(--muted);margin-top:auto;padding-top:8px;font-style:italic}
+.pforms{margin-top:12px;font-size:13px;color:var(--muted)}
+.pcell{border:1px solid var(--line2);border-radius:8px;padding:12px 14px}
+.plabel{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:6px}
+.plevel{font-size:20px;font-weight:600;margin-top:4px}
+.pval{font-size:17px;font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:10px}
+.pnote{font-size:13px;color:var(--muted);margin-top:2px}
+.lv-strong,.lv-clear,.lv-high{color:#1f4f7a}
+.lv-moderate,.lv-some{color:#3f5f80}
+.lv-weaker,.lv-little,.lv-low{color:#5d6470}
+.lv-broad{color:#1f4f7a}
+.lv-insufficient{color:var(--faint)}
+.tip{position:relative;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--neu-line);background:#fff;color:var(--muted);font-size:10.5px;font-weight:700;cursor:help;padding:0}
+.tip:hover::after,.tip:focus::after{content:attr(data-tip);position:absolute;left:50%;transform:translateX(-50%);top:22px;width:300px;background:#1f2630;color:#fff;font-size:12.5px;font-weight:400;line-height:1.45;text-transform:none;letter-spacing:0;padding:9px 11px;border-radius:7px;z-index:30;text-align:left;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.pdetails{margin-top:12px}
+.pval2{margin-top:4px;font-size:14px;color:var(--muted);line-height:1.55}.pval2 b{font-size:17px;color:var(--ink);font-variant-numeric:tabular-nums;display:inline-block;min-width:52px}
+.indicate{margin-top:14px;background:#f7f8fa;border-left:3px solid var(--accent-line);border-radius:6px;padding:10px 14px;font-size:14.5px;line-height:1.5;color:var(--ink)}
+.pdetails>summary,.fold>summary{cursor:pointer;color:var(--accent);font-size:13.5px}
+.pdgrid{display:grid;grid-template-columns:1.2fr 1fr;gap:18px;margin-top:10px;font-size:14px;color:var(--ink2)}
+/* folds */
+.folds{margin-top:18px;display:flex;flex-direction:column;gap:10px}
+.fold{padding:12px 18px}
+.fold>summary{list-style:none;font-size:15px;color:var(--ink);font-weight:600;display:flex;align-items:center;gap:8px}
+.fold>summary::-webkit-details-marker{display:none}
+.fold>summary::before{content:"▸";color:var(--muted);font-size:13px}
+.fold[open]>summary::before{content:"▾"}
+.fold .fnote{font-size:13px;color:var(--muted);font-weight:400;margin-left:auto}
+.checks{list-style:none;padding:0;margin:12px 0 0;display:flex;flex-direction:column;gap:8px}
+.checks li{display:grid;grid-template-columns:22px 1fr;gap:8px;font-size:14px}
+.mark{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;border:1px solid}
+.mark.ok{color:var(--ok);background:var(--ok-bg);border-color:var(--ok-line)}
+.mark.part{color:var(--warn);background:var(--warn-bg);border-color:var(--warn-line)}
+.mark.no{color:var(--neu);background:var(--neu-bg);border-color:var(--neu-line)}
+.checks .rule{font-size:12.5px;color:var(--faint)}
+.sep{font-size:13px;color:var(--muted);border-top:1px solid var(--line2);margin-top:12px;padding-top:10px}
+table.t{border-collapse:collapse;width:100%;font-size:13.5px}
+table.t th,table.t td{border-bottom:1px solid var(--line2);padding:6px 8px;text-align:left;vertical-align:top}
+table.t th{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+table.t td.num{text-align:right;font-variant-numeric:tabular-nums}
+/* compare */
+.cmpgrid{display:grid;grid-template-columns:1fr;gap:18px;align-items:start}
+.cmpgrid>div:first-child{max-width:760px}
+svg text{font-family:Inter,system-ui,sans-serif}
+.pt{cursor:pointer}
+.pt:focus{outline:none}
+.pt:focus .dot,.pt:hover .dot{stroke:#111;stroke-width:2}
+.svgtip{position:fixed;pointer-events:none;background:#1f2630;color:#fff;font-size:12.5px;line-height:1.45;border-radius:7px;padding:9px 11px;z-index:40;max-width:300px;display:none}
+/* eval */
+.evalbar{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:12px 18px}
+.evalbar label{font-size:13px;color:var(--muted)}
+.evalbar input,.evalbar select{font:inherit;font-size:14px;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:#fff}
+.rating{display:grid;grid-template-columns:230px repeat(5,44px);gap:6px;align-items:center;font-size:14px}
+.rating input{display:none}
+.rating label.r{border:1px solid var(--line);border-radius:6px;text-align:center;padding:5px 0;cursor:pointer;font-weight:600;color:var(--ink2);background:#fff}
+.rating input:checked+label.r{background:var(--accent);color:#fff;border-color:var(--accent)}
+.rating input:focus-visible+label.r{outline:2px solid var(--accent);outline-offset:1px}
+.btn{border:1px solid var(--line);background:#fff;border-radius:7px;padding:7px 14px;cursor:pointer;font-size:14px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.notice{border:1px dashed var(--warn-line);background:var(--warn-bg);color:#5d3d00;border-radius:8px;padding:10px 12px;font-size:14px}
+.hidden{display:none!important}
+/* figure mode: the core viewport used for the paper figure */
+body.figure .appbar,body.figure .side,body.figure .meta,body.figure .pdetails,body.figure .more,body.figure .imgbtn,body.figure .exfoot .conf{display:none!important}
+body.figure .shell{grid-template-columns:1fr;max-width:1180px;padding:18px 18px 18px}
+body.figure .main{max-width:none}
+body.figure .evscroll{max-height:none;overflow:visible}
+body.figure .pgrid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+body.figure .ptext,body.figure .ph span,body.figure .sec .sub,body.figure #interp .sep,body.figure .fold .fnote{display:none!important}
+body.paper .why,body.paper .folds,body.paper .exfoot,body.paper .ex .topic,body.paper .ex .cited,body.paper .imgslot{display:none!important}
+body.paper .shell{max-width:1000px}
+body.paper .summary{font-size:15.5px;margin-bottom:14px}
+body.paper .ex .q{font-size:14.5px}
+body.paper .ans{grid-template-columns:118px 1fr}
+body.paper .split{margin-top:14px}
+body.paper .profile{margin-top:14px}
+body.paper .profile .ph span{display:none}
+body.paper .pnote .pos{display:none}
+body.paper .plevel{font-size:17px;line-height:1.3}
+body.paper .tip{display:none}
+body.foldsonly .split,body.foldsonly #profile,body.foldsonly .side,body.foldsonly .appbar{display:none!important}
+body.foldsonly .shell{grid-template-columns:1fr;max-width:1100px}
+body.full .evscroll{max-height:none;overflow:visible}
+body.full .side{position:static}
+body.full .appbar{position:static}
+.papernote{font-size:12.5px;color:var(--faint);margin-top:10px}
+@media (max-width:1100px){.shell{grid-template-columns:220px minmax(0,1fr)}.pgrid{grid-template-columns:1fr 1fr}}
+@media (max-width:900px){.shell{grid-template-columns:1fr}.side{position:static}.split,.cmpgrid,.pdgrid{grid-template-columns:1fr}.why .pop{width:300px}}
+</style>
+</head>
+<body>
+<header class="appbar"><div class="in">
+  <div class="brand">Candidate Error Review Workspace<small>Candidate error patterns in multiple-choice distractors: descriptive evidence, not diagnoses of individual learners</small></div>
+  <nav class="tabs" role="tablist" aria-label="Views">
+    <button class="tab" role="tab" data-v="review">Review</button>
+    <button class="tab" role="tab" data-v="compare">Compare groups</button>
+    <button class="tab" role="tab" data-v="eval">Evaluation mode</button>
+  </nav>
+</div></header>
+<div class="shell">
+  <aside class="side" aria-label="Candidate groups"><h2>Candidate groups</h2><ul class="glist" id="glist"></ul></aside>
+  <main class="main" id="main"></main>
+</div>
+<div class="svgtip" id="svgtip" role="tooltip"></div>
+<script id="data" type="application/json">__DATA__</script>
+<script>
+const DATA = JSON.parse(document.getElementById('data').textContent);
+const G = DATA.groups;
+const sup = s => String(s ?? '').replace(/\^2/g, '²').replace(/\^3/g, '³');
+const esc = s => sup(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pct = v => v == null ? '–' : `${Math.round(100 * v)}%`;
+const fmtp = p => p < 0.001 ? 'p < .001' : 'p = ' + p.toFixed(3);
+const sgn = v => (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(2);
+const STATUS = {supported:['✓','Supported'], partial:['!','Partially supported'], notcoherent:['–','Not coherent']};
+const LV = {
+  prof:{strong:'Strong decline', moderate:'Moderate decline', weaker:'Weaker decline'},
+  rec:{clear:'Recurs across quizzes', some:'Some recurrence', little:'Little recurrence'},
+  spec:{persists:'persists among incorrect responses', weaker:'weaker among incorrect responses', none:'not specific to this error'},
+  conf:{high:'Relatively high', moderate:'Moderate', low:'Low', insufficient:'Insufficient data'}
+};
+const TIP = {
+  or:'The multiplicative change in the odds of selecting these distractors for a one-standard-deviation increase in learner proficiency, adjusted for item difficulty. Values further below 1 indicate a stronger decline.',
+  prof:'Selection rate among the weakest and strongest quarters of learners, ranked by accuracy on the other questions. Groups are compared by the difficulty-adjusted odds ratio per SD of proficiency.',
+  rec:'Whether learners who show this pattern in one set of quizzes also show it in another set, after accounting for overall proficiency and general error-proneness (within-group split-half correlation minus the correlation with other groups). Overall = all attempts; the second value uses incorrect responses only.',
+  spec:'The same recurrence analysis restricted to wrong responses. It helps distinguish a tendency towards this particular error from a general tendency to answer incorrectly.',
+  conf:'Share of distractors (with at least 20 confidence ratings) whose selectors rated their confidence within 5 points of learners who answered correctly.'
+};
+let S = {g: 7, v: 'review', figure: false, all: false, hl: null, ev: {i: 0}};
+
+function readHash() {
+  const h = new URLSearchParams(location.hash.slice(1));
+  const gi = G.findIndex(x => x.id === h.get('g')); if (gi >= 0) S.g = gi;
+  if (h.get('v')) S.v = h.get('v');
+  S.paper = h.get('paper') === '1'; S.full = h.get('full') === '1'; S.open = (h.get('open') || '').split(','); S.foldsOnly = h.get('folds') === '1'; S.figure = S.paper || h.get('figure') === '1'; S.all = h.get('ex') === 'all'; S.hl = h.get('hl');
+  document.body.classList.toggle('figure', S.figure); document.body.classList.toggle('paper', S.paper); document.body.classList.toggle('full', S.full); document.body.classList.toggle('foldsonly', S.foldsOnly);
+}
+function writeHash() {
+  const h = new URLSearchParams(); h.set('g', G[S.g].id); h.set('v', S.v); if (S.paper) h.set('paper', '1'); else if (S.figure) h.set('figure', '1'); if (S.full) h.set('full', '1');
+  history.replaceState(null, '', '#' + h.toString());
+}
+const statusBadge = (st, sm) => `<span class="status st-${st}${sm ? ' sm' : ''}"><span class="ic" aria-hidden="true">${STATUS[st][0]}</span>${STATUS[st][1]}</span>`;
+const tip = (k) => `<button class="tip" type="button" aria-label="Explanation" data-tip="${esc(TIP[k])}">?</button>`;
+
+// ------------------------------------------------ sidebar
+function renderSidebar() {
+  document.getElementById('glist').innerHTML = G.map((g, i) => `
+    <li><button class="gitem" data-i="${i}" aria-current="${i === S.g && S.v !== 'compare'}">
+      <span class="gid">${g.id}</span>
+      <span class="gname">${esc(g.short)}</span>
+      <span class="gmeta">${statusBadge(g.status, true)}<span class="mini">proficiency: ${LV.prof[g.levels.prof].toLowerCase()} · recurrence: ${g.levels.rec === 'clear' ? 'clear' : g.levels.rec === 'some' ? 'some' : 'little'}</span></span>
+    </button></li>`).join('');
+  document.querySelectorAll('.gitem').forEach(b => b.onclick = () => { S.g = +b.dataset.i; S.v = S.v === 'compare' ? 'review' : S.v; S.all = false; S.ev.i = S.g; render(); window.scrollTo({top: 0}); });
+}
+
+// ------------------------------------------------ review view components
+function CandidateHeader(g) {
+  const nc = g.status === 'notcoherent';
+  const title = nc ? 'No single coherent error identified' : g.title;
+  const whyTitle = g.status === 'supported' ? 'Why is this candidate supported?' : g.status === 'partial' ? 'Why is this candidate only partly supported?' : 'Why is this group not a coherent candidate?';
+  const nClaims = g.interp.claims.length;
+  return `<section class="panel head">
+    <div class="kicker">${nc ? 'Candidate group' : 'Candidate error group'} ${g.id}</div>
+    <div class="titlerow"><h1>${esc(title)}</h1>
+      <div class="right">${statusBadge(g.status)}
+        <details class="why"><summary>Why?</summary><div class="panel pop">${AuditChecklist(g, whyTitle)}</div></details>
+      </div></div>
+    ${nc ? `<div class="meta" style="display:block;margin-top:4px">Group content: ${esc(g.title)}</div>` : ''}
+    <div class="profile-line">${nc ? 'Observed learner pattern' : 'Learner pattern'}: <b>${esc(g.profile)}</b></div>
+    <div class="meta"><span>${g.n} distractors</span><span>Bootstrap stability ${g.jaccard.toFixed(2)}</span><span>External evidence: ${g.ext}</span>
+      <button class="auditbadge" type="button" onclick="document.getElementById('interp').scrollIntoView({behavior:'smooth'})" title="Evidence-link audit: ${nClaims} substantive claims, ${nClaims} linked to valid exemplar IDs, 0 unresolved references">✓ Evidence-link audit passed</button></div>
+    ${g.status === 'partial' ? `<div class="caution partial" role="note"><b>!</b><span>Evidence is mixed. Review this interpretation before use.</span></div>` : ''}
+    ${nc ? `<div class="caution notcoherent" role="note"><b>–</b><span>This group contains multiple related error forms and did not satisfy the candidate-coherence criteria. The notes below describe the separate forms; they are not a single interpretation.</span></div>` : ''}
+  </section>`;
+}
+function EvidenceLinkedClaim(c, k) {
+  return `<li class="claim" id="claim-${k}" data-ex="${c.examples.join(' ')}">${esc(c.text)}
+    <span class="chips">${c.examples.map(e => `<button class="chip" type="button" data-e="${e}" data-k="${k}" aria-label="Show example ${e}">${e}</button>`).join('')}</span></li>`;
+}
+function GeneratedInterpretation(g) {
+  const nc = g.status === 'notcoherent';
+  return `<section class="panel sec" id="interp">
+    <h2>${nc ? 'Generated description' : 'Generated interpretation'}</h2>
+    <div class="sub">Candidate interpretation written by an LLM from the representative distractors and response summaries only.</div>
+    <p class="summary">${esc(S.paper ? paperSummary(g) : g.interp.summary)}</p>
+    <h2 style="margin-bottom:8px">Evidence-linked claims</h2>
+    <ol class="claims">${(S.paper ? g.interp.claims.slice(0, 2) : g.interp.claims).map(EvidenceLinkedClaim).join('')}</ol>
+    <div class="sep">Evidence-link audit: ${g.interp.claims.length} substantive claims, ${g.interp.claims.length} linked to valid exemplar IDs, 0 unresolved references. This checks traceability to the supplied examples, not the correctness of the interpretation.</div>
+  </section>`;
+}
+// paper view (#paper=1): verbatim excerpt of the generated text, first two claims, first cited example of each claim
+function paperSummary(g) { const t = g.interp.summary.match(/[^.]+\.(\s|$)/g) || [g.interp.summary]; return t[t.length - 1].trim(); }
+function paperExamples(g) { return g.interp.claims.slice(0, 2).map(c => c.examples[0]); }
+function citedOrder(g) { const o = []; g.interp.claims.forEach(c => c.examples.forEach(e => { if (!o.includes(e)) o.push(e); })); return o; }
+function ExemplarCard(e, citedBy) {
+  return `<article class="ex" id="ex-${e.id}" tabindex="-1" data-e="${e.id}">
+    <div class="exhead"><span class="eid">Example ${e.id}</span>${citedBy.length ? `<span class="cited">cited in claim ${citedBy.map(k => k + 1).join(', ')}</span>` : ''}<span class="topic">${esc(e.topic)}</span></div>
+    <div class="q">${esc(e.question)}</div>
+    <div class="ans"><span class="lab">Correct answer</span><span class="val correct">✓ ${esc(e.correct) || '<i>shown in image</i>'}</span>
+      <span class="lab">Selected distractor</span><span class="val wrong">✗ ${esc(e.distractor) || '<i>shown in image</i>'}</span></div>
+    <div class="exfoot"><span>selected on ${pct(e.selection)} of ${e.attempts.toLocaleString()} attempts</span><span>${pct(e.error_rate)} answered incorrectly</span>
+      ${e.confident_error ? '<span class="conf">selectors about as confident as correct responders</span>' : ''}
+      ${e.img ? `<button class="imgbtn" type="button" data-img="${e.id}">Show question image</button>` : ''}</div>
+    <div class="imgslot"></div>
+  </article>`;
+}
+function RepresentativeEvidence(g) {
+  const order = citedOrder(g); const cap = S.figure ? 3 : 5;
+  const shown = S.paper ? paperExamples(g) : S.all ? g.exemplars.map(e => e.id).sort((a, b) => (order.includes(a) ? order.indexOf(a) : 99) - (order.includes(b) ? order.indexOf(b) : 99) || +a.slice(1) - +b.slice(1)) : order.slice(0, cap);
+  const byId = Object.fromEntries(g.exemplars.map(e => [e.id, e]));
+  const citedBy = id => g.interp.claims.map((c, k) => c.examples.includes(id) ? k : -1).filter(k => k >= 0);
+  return `<section class="panel sec" id="evidence">
+    <h2>${S.paper ? 'Representative evidence' : 'Evidence: representative distractors'}</h2>
+    <div class="sub">Question + correct answer + selected distractor, from the ${g.exemplars.length} distractors nearest the group centre.</div>
+    <div class="evscroll" id="evscroll"><div class="evlist">${shown.map(id => ExemplarCard(byId[id], citedBy(id))).join('')}</div>
+    ${S.paper ? `<div class="papernote">First cited example per claim; all ${g.exemplars.length} representative distractors are available in the interface.</div>` : ''}
+    ${S.all ? `<button class="more" type="button" id="lessbtn">Show only cited examples</button>` : `<button class="more" type="button" id="morebtn">Show all ${g.exemplars.length} representative examples</button>`}</div>
+  </section>`;
+}
+function miniBars(q1, q4) {
+  const h = v => Math.max(2, Math.round(34 * v / 0.35));
+  return `<svg width="38" height="36" viewBox="0 0 38 36" role="img" aria-label="weakest quarter ${pct(q1)}, strongest quarter ${pct(q4)}">
+    <rect x="2" y="${36 - h(q1)}" width="14" height="${h(q1)}" rx="2" fill="#5b82ad"/><rect x="21" y="${36 - h(q4)}" width="14" height="${h(q4)}" rx="2" fill="#b7c9dc"/></svg>`;
+}
+function LearnerPatternProfile(g) {
+  const b = g.beh, L = g.levels;
+  const others = G.filter(x => x.id !== g.id);
+  const rankOR = [...G].sort((a, c) => a.beh.or_adj - c.beh.or_adj).findIndex(x => x.id === g.id) + 1;
+  const rankQ4 = [...G].sort((a, c) => c.beh.q4 - a.beh.q4).findIndex(x => x.id === g.id) + 1;
+  const profSentence = L.prof === 'strong' ? `Selection declines sharply as proficiency increases: one of the strongest proficiency gradients among the candidate groups (rank ${rankOR} of ${G.length}).`
+    : L.prof === 'moderate' ? `Selection declines with proficiency at a rate similar to most candidate groups (rank ${rankOR} of ${G.length}).`
+    : `Selection declines less with proficiency than in most candidate groups (rank ${rankOR} of ${G.length}).`;
+  const q4Sentence = rankQ4 <= 2 ? ` It remains comparatively common among the strongest quarter of learners (${pct(b.q4)}, among the highest of any group).` : '';
+  const recSentence = L.rec === 'clear' ? 'Learners who show this error in one set of quizzes are more likely to show it again in another set, after accounting for overall proficiency.'
+    : L.rec === 'some' ? 'There is some evidence that the same learners show this error in separate sets of quizzes, after accounting for proficiency.'
+    : 'Little evidence that the same learners show this error across separate sets of quizzes beyond what proficiency predicts.';
+  const specSentence = L.spec === 'persists' ? 'Recurrence remains when only incorrect responses are considered, suggesting that the pattern is more specific than a general tendency to make mistakes.'
+    : L.spec === 'weaker' ? 'Recurrence is weaker when only incorrect responses are considered, so part of it may reflect a general tendency to answer these items wrongly.'
+    : 'Among incorrect responses there is little evidence of recurrence of this particular error.';
+  const confSentence = b.conf == null ? `Too few confidence ratings to judge (${b.conf_rated} of ${g.n} distractors rated).`
+    : `${pct(b.conf)} of rated distractors were selected with confidence comparable to correct responses.`;
+  // educator-facing wording: headline, key numbers, and one comparison with the other candidate groups
+  const N = G.length, below = (arr, v) => arr.filter(x => x < v).length + 1, above = (arr, v) => arr.filter(x => x > v).length + 1;
+  const rOR = below(G.map(x => x.beh.or_adj), b.or_adj);                 // 1 = steepest decline
+  const who = b.q4 >= 0.16 ? ['Still fairly common among stronger learners', 'broad']
+    : L.prof === 'strong' ? ['Steep decline with proficiency', 'strong']
+    : L.prof === 'moderate' ? ['Declines with proficiency', 'moderate'] : ['Gradual decline with proficiency', 'weaker'];
+  const whoCmp = rOR <= 2 ? 'One of the strongest declines across candidate groups.'
+    : rOR >= N - 1 ? 'One of the weakest declines across candidate groups.' : 'A decline similar to most candidate groups.';
+  const rec = L.rec === 'little' ? ['Little evidence', 'little']
+    : L.spec === 'persists' ? ['Yes — recurs across quizzes', 'clear'] : ['Partly', 'some'];
+  const recText = L.rec === 'little' ? 'Little sign that the same learners repeat this pattern across quizzes.'
+    : L.spec === 'persists' ? 'The same learners tend to show this pattern across separate quizzes.'
+    : 'The same learners tend to answer these items wrongly across quizzes, but less often with these specific distractors.';
+  const conf = {low: 'Usually not', moderate: 'Sometimes', high: 'Often', insufficient: 'Too few ratings to tell'}[L.conf];
+  const rated = G.filter(x => x.beh.conf != null), rC = b.conf == null ? null : below(rated.map(x => x.beh.conf), b.conf);
+  const confCmp = rC == null ? `Only ${b.conf_rated} of ${g.n} distractors had enough confidence ratings.`
+    : rC <= 2 ? 'Among the lower confidence rates across candidate groups.'
+    : rC >= rated.length - 1 ? 'Among the higher confidence rates across candidate groups.' : 'Similar to most candidate groups.';
+  return `<section class="panel profile" id="profile">
+    <div class="ph"><h2 style="margin:0;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600">How this error appears across learners</h2>
+      <span style="font-size:14px;color:var(--ink2)">Patterns across the learner population, not profiles of individual learners</span></div>
+    <div class="pgrid">
+      <div class="pcell"><div class="plabel">How does this change with proficiency? ${tip('prof')}</div>
+        <div class="plevel lv-${who[1]}">${who[0]}</div>
+        <div class="pval">${miniBars(b.q1, b.q4)}<span>${pct(b.q1)} → ${pct(b.q4)}</span></div>
+        <div class="pnote">${whoCmp}</div></div>
+      <div class="pcell"><div class="plabel">Does it recur in the same learners? ${tip('rec')}</div>
+        <div class="plevel lv-${rec[1]}">${rec[0]}</div>
+        <div class="pval2"><div><b>${sgn(b.rec)}</b> overall</div><div><b>${sgn(b.spec)}</b> among incorrect responses</div></div>
+        <div class="pnote">${recText}</div></div>
+      <div class="pcell"><div class="plabel">Are learners confident when wrong? ${tip('conf')}</div>
+        <div class="plevel lv-${L.conf}">${conf}</div>
+        <div class="pval">${b.conf == null ? '–' : pct(b.conf)}</div>
+        <div class="pnote">${confCmp}</div></div>
+    </div>
+    <div class="indicate"><b>What this pattern may indicate.</b> ${esc(g.indicate)}</div>
+    <p class="ptext" style="margin:8px 2px 0;font-size:13px;color:var(--faint)">Observational summaries of response data; they describe groups of responses, not the misconceptions of individual learners, and do not show that any intervention would help.</p>
+    <details class="pdetails"><summary>Details and comparison with other groups</summary>
+      <div class="pdgrid"><div>
+        <p><b>Proficiency sensitivity.</b> ${profSentence}${q4Sentence} Difficulty-adjusted odds ratio per SD of proficiency: ${b.or_adj.toFixed(2)}.</p>
+        <p><b>Learner-specific recurrence.</b> ${recSentence} All attempts ${sgn(b.rec)} (95% interval ${sgn(b.rec_lo)} to ${sgn(b.rec_hi)}).</p>
+        <p><b>Error specificity.</b> ${specSentence} Incorrect responses only ${sgn(b.spec)} (95% interval ${sgn(b.spec_lo)} to ${sgn(b.spec_hi)}).</p>
+        <p><b>Confidence profile.</b> ${confSentence}</p>
+      </div><div>${DecileChart(g)}</div></div>
+    </details>
+  </section>`;
+}
+function DecileChart(g) {
+  const w = 380, h = 210, m = {l: 40, r: 12, t: 14, b: 34}, X = i => m.l + i * (w - m.l - m.r) / 9, Y = v => m.t + (1 - v / 0.36) * (h - m.t - m.b);
+  const line = (c) => c.map((v, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join('');
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" role="img" aria-label="Selection by proficiency decile for ${g.id} (dark) and other groups (light)">
+    ${[0, .1, .2, .3].map(v => `<line x1="${m.l}" x2="${w - m.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="#eceef1"/><text x="${m.l - 6}" y="${Y(v) + 4}" font-size="10.5" text-anchor="end" fill="#8b929c">${Math.round(v * 100)}%</text>`).join('')}
+    ${G.filter(x => x.id !== g.id).map(x => `<path d="${line(x.beh.curve)}" fill="none" stroke="#cfd6df" stroke-width="1.3"/>`).join('')}
+    <path d="${line(g.beh.curve)}" fill="none" stroke="#2f5d8c" stroke-width="2.6"/>
+    <text x="${m.l}" y="${h - 8}" font-size="10.5" fill="#6a7280">weakest</text><text x="${w - m.r}" y="${h - 8}" font-size="10.5" text-anchor="end" fill="#6a7280">strongest learners (deciles)</text>
+  </svg><div style="font-size:12.5px;color:var(--faint)">Share of attempts selecting these distractors, by learner proficiency decile; ${g.id} dark, other groups light.</div>`;
+}
+function AuditChecklist(g, title) {
+  const m = c => c.ok ? ['ok', '✓'] : c.partial ? ['part', '~'] : ['no', '✗'];
+  return `<div style="font-weight:600;font-size:14.5px">${esc(title)}</div>
+    <ul class="checks">${g.checks.map(c => { const [cls, ic] = m(c); return `<li><span class="mark ${cls}" aria-label="${cls === 'ok' ? 'met' : cls === 'part' ? 'partly met' : 'not met'}">${ic}</span><div>${esc(c.label)}<div class="rule">${esc(c.value)} · rule: ${esc(c.rule)}</div></div></li>`; }).join('')}</ul>
+    <div class="sep">Candidate audit asks whether the semantic group is coherent and stable enough to interpret. It is separate from the evidence-link audit, which asks whether each generated claim can be traced to the supplied examples.</div>`;
+}
+function CandidateAuditPanel(g) {
+  const t = g.status === 'supported' ? 'Why is this candidate supported?' : g.status === 'partial' ? 'Why is this candidate only partly supported?' : 'Why is this group not a coherent candidate?';
+  return `<details class="panel fold" id="auditfold"${S.open.includes('audit') ? ' open' : ''}><summary>${esc(t)}<span class="fnote">candidate audit</span></summary>${AuditChecklist(g, 'Candidate-coherence criteria')}</details>`;
+}
+function ExternalEvidencePanel(g) {
+  const x = g.external;
+  return `<details class="panel fold" id="extfold"${S.open.includes('ext') ? ' open' : ''}><summary>External audit evidence<span class="fnote">kept separate from the LLM interpretation</span></summary>
+    <div class="sep" style="border-top:none;margin-top:6px;padding-top:0">External misconception-bank evidence (2,587 Eedi descriptions, matched by text similarity) is used to audit the candidate group. It is not part of the evidence given to the LLM interpretation.</div>
+    <table class="t" style="margin-top:10px"><tbody>
+      <tr><th>Dominant external misconception family</th><td>${esc(x.family)}</td></tr>
+      <tr><th>Full-group concentration</th><td>${pct(x.share_all)} (random groups of the same size: ${pct(x.null_all)}; ${fmtp(x.p_all)})</td></tr>
+      <tr><th>Core-15 concentration</th><td>${pct(x.share_ex)} (random: ${pct(x.null_ex)}; ${fmtp(x.p_ex)})</td></tr>
+    </tbody></table>
+    <div style="margin-top:12px;font-size:13px;color:var(--muted)">Most frequent matched descriptions (automatic retrieval; indicative only)</div>
+    <table class="t"><tbody>${x.matches.map(mm => `<tr><td>${esc(mm.name)}</td><td class="num">${mm.count} distractors</td></tr>`).join('')}</tbody></table>
+  </details>`;
+}
+function renderReview() {
+  const g = G[S.g];
+  return CandidateHeader(g) + `<div class="split">${GeneratedInterpretation(g)}${RepresentativeEvidence(g)}</div>` + LearnerPatternProfile(g)
+    + `<div class="folds">${CandidateAuditPanel(g)}${ExternalEvidencePanel(g)}</div>`;
+}
+
+// ------------------------------------------------ claim <-> evidence interaction
+function highlight(eid, k) {
+  document.querySelectorAll('.ex.lit,.claim.lit,.chip.on').forEach(el => el.classList.remove('lit', 'on'));
+  if (!eid) return;
+  let card = document.getElementById('ex-' + eid);
+  if (!card) { S.all = true; draw(); card = document.getElementById('ex-' + eid); }
+  if (!card) return;
+  card.classList.add('lit');
+  document.querySelectorAll(`.chip[data-e="${eid}"]`).forEach(c => c.classList.add('on'));
+  if (k != null) document.getElementById('claim-' + k)?.classList.add('lit');
+  const sc = document.getElementById('evscroll');
+  if (sc && sc.scrollHeight > sc.clientHeight) { const top = card.offsetTop - sc.offsetTop - 8; sc.scrollTo({top, behavior: 'smooth'}); }
+  else { const r = card.getBoundingClientRect(); if (r.top < 70 || r.bottom > innerHeight) card.scrollIntoView({behavior: 'smooth', block: 'center'}); }
+}
+function bindReview() {
+  document.querySelectorAll('.chip').forEach(ch => {
+    const go = () => highlight(ch.dataset.e, +ch.dataset.k);
+    ch.addEventListener('mouseenter', go); ch.addEventListener('focus', go); ch.addEventListener('click', go);
+  });
+  document.querySelectorAll('.ex').forEach(ex => ex.addEventListener('mouseenter', () => {
+    document.querySelectorAll('.claim.lit').forEach(c => c.classList.remove('lit'));
+    document.querySelectorAll('.claim').forEach(c => { if (c.dataset.ex.split(' ').includes(ex.dataset.e)) c.classList.add('lit'); });
+  }));
+  document.getElementById('morebtn')?.addEventListener('click', () => { S.all = true; draw(); });
+  document.getElementById('lessbtn')?.addEventListener('click', () => { S.all = false; draw(); });
+  document.querySelectorAll('.imgbtn').forEach(b => b.onclick = () => {
+    const e = G[S.g].exemplars.find(x => x.id === b.dataset.img); const slot = b.closest('.ex').querySelector('.imgslot');
+    if (slot.innerHTML) { slot.innerHTML = ''; b.textContent = 'Show question image'; } else { slot.innerHTML = `<img src="${e.img}" alt="Question image for example ${e.id}">`; b.textContent = 'Hide question image'; }
+  });
+}
+
+// ------------------------------------------------ compare view: behavioural landscape
+function BehaviouralLandscape() {
+  const w = 700, h = 470, m = {l: 64, r: 26, t: 26, b: 64};
+  const xs = G.map(g => 1 - g.beh.or_adj), ys = G.map(g => g.beh.rec);
+  const x0 = Math.min(...xs) - 0.02, x1 = Math.max(...xs) + 0.02, y0 = Math.min(-0.02, Math.min(...ys) - 0.02), y1 = Math.max(...ys) + 0.03;
+  const X = v => m.l + (v - x0) / (x1 - x0) * (w - m.l - m.r), Y = v => h - m.b - (v - y0) / (y1 - y0) * (h - m.t - m.b);
+  const col = {supported: '#2d6a48', partial: '#a06800', notcoherent: '#7a818c'};
+  const shape = (g, cx, cy, r) => g.status === 'supported' ? `<circle class="dot" cx="${cx}" cy="${cy}" r="${r}" fill="${col.supported}" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/>`
+    : g.status === 'partial' ? `<rect class="dot" x="${cx - r}" y="${cy - r}" width="${2 * r}" height="${2 * r}" transform="rotate(45 ${cx} ${cy})" fill="${col.partial}" fill-opacity=".85" stroke="#fff" stroke-width="1.5"/>`
+    : `<circle class="dot" cx="${cx}" cy="${cy}" r="${r}" fill="#fff" stroke="${col.notcoherent}" stroke-width="2" stroke-dasharray="3 2"/>`;
+  const pts = G.map((g, i) => { const r = g.beh.conf == null ? 7 : 7 + 18 * g.beh.conf; const cx = X(xs[i]), cy = Y(ys[i]);
+    const crowd = G.some((o, j) => j !== i && X(xs[j]) > cx && X(xs[j]) - cx < 60 && Math.abs(Y(ys[j]) - cy) < 16);
+    const lx = crowd ? cx - r - 5 : cx + r + 5, anc = crowd ? 'end' : 'start';
+    return `<g class="pt" tabindex="0" role="button" data-i="${i}" aria-label="${g.id} ${esc(g.title)}, ${STATUS[g.status][1]}">${shape(g, cx, cy, r)}
+      <text x="${lx}" y="${cy + 4}" font-size="13" font-weight="600" fill="#1b1f24" text-anchor="${anc}">${g.id}</text></g>`; }).join('');
+  const yz = Y(0);
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" role="img" aria-label="Behavioural landscape of the candidate groups">
+    <line x1="${m.l}" x2="${w - m.r}" y1="${yz}" y2="${yz}" stroke="#d5d9df" stroke-dasharray="4 3"/>
+    <line x1="${m.l}" x2="${m.l}" y1="${m.t}" y2="${h - m.b}" stroke="#aeb4bd"/><line x1="${m.l}" x2="${w - m.r}" y1="${h - m.b}" y2="${h - m.b}" stroke="#aeb4bd"/>
+    <text x="${m.l}" y="${h - m.b + 22}" font-size="12.5" fill="#6a7280">less proficiency-dependent</text>
+    <text x="${w - m.r}" y="${h - m.b + 22}" font-size="12.5" fill="#6a7280" text-anchor="end">more proficiency-dependent →</text>
+    <text x="${(m.l + w - m.r) / 2}" y="${h - 14}" font-size="13" font-weight="600" fill="#3f4652" text-anchor="middle">Proficiency sensitivity (difficulty-adjusted)</text>
+    <text transform="translate(18 ${(m.t + h - m.b) / 2}) rotate(-90)" font-size="13" font-weight="600" fill="#3f4652" text-anchor="middle">Learner-specific recurrence</text>
+    <text x="${m.l + 6}" y="${m.t + 8}" font-size="12" fill="#6a7280">high ↑</text><text x="${m.l + 6}" y="${yz - 6}" font-size="12" fill="#8b929c">none</text>
+    ${pts}</svg>`;
+}
+function renderCompare() {
+  const rows = G.map((g, i) => `<tr><td><button class="chip" type="button" data-go="${i}">${g.id}</button></td><td>${esc(g.short)}</td><td>${statusBadge(g.status, true)}</td>
+    <td class="num">${g.beh.or_adj.toFixed(2)}</td><td class="num">${sgn(g.beh.rec)}</td><td class="num">${sgn(g.beh.spec)}</td><td class="num">${g.beh.conf == null ? '–' : pct(g.beh.conf)}</td></tr>`).join('');
+  return `<section class="panel sec"><h2>Compare candidate groups: behavioural landscape</h2>
+    <div class="sub">Each point is a semantic candidate group. Horizontal: how strongly selection declines with proficiency (1 − adjusted odds ratio per SD). Vertical: recurrence within the same learners across quizzes. Point size: share of confident errors (smallest point = insufficient ratings). Shape: ● supported, ◆ partially supported, ◌ not coherent. Select a point to open the group.</div>
+    <div class="cmpgrid"><div>${BehaviouralLandscape()}</div>
+    <div><table class="t"><thead><tr><th></th><th>Group</th><th>Status</th><th>OR/SD</th><th>Recur.</th><th>Incorr.</th><th>Conf.</th></tr></thead><tbody>${rows}</tbody></table>
+    <p style="font-size:13px;color:var(--muted);margin-top:10px">The two dimensions describe how the distractors are selected across learners. They do not diagnose misconceptions: a group can be proficiency-linked without recurring in the same learners, and the reverse.</p></div></div></section>`;
+}
+function bindCompare() {
+  const tipEl = document.getElementById('svgtip');
+  document.querySelectorAll('.pt').forEach(p => {
+    const g = G[+p.dataset.i];
+    const show = (ev) => { tipEl.innerHTML = `<b>${g.id} ${esc(g.title)}</b><br>${STATUS[g.status][1]}<br>OR per SD (adjusted) ${g.beh.or_adj.toFixed(2)}<br>Recurrence ${sgn(g.beh.rec)} · incorrect only ${sgn(g.beh.spec)}<br>Confident errors ${g.beh.conf == null ? 'insufficient data' : pct(g.beh.conf)}`;
+      tipEl.style.display = 'block'; const r = p.getBoundingClientRect(); tipEl.style.left = (r.right + 10) + 'px'; tipEl.style.top = (r.top - 4) + 'px'; };
+    p.addEventListener('mouseenter', show); p.addEventListener('focus', show);
+    p.addEventListener('mouseleave', () => tipEl.style.display = 'none'); p.addEventListener('blur', () => tipEl.style.display = 'none');
+    const go = () => { tipEl.style.display = 'none'; S.g = +p.dataset.i; S.v = 'review'; S.all = false; render(); window.scrollTo({top: 0}); };
+    p.addEventListener('click', go); p.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+  });
+  document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { S.g = +b.dataset.go; S.v = 'review'; render(); window.scrollTo({top: 0}); });
+}
+
+// ------------------------------------------------ evaluation mode
+const CRIT = ['Accuracy', 'Specificity', 'Completeness', 'Evidence grounding', 'Pedagogical usefulness'];
+const EKEY = 'review-eval-ratings-v1';
+const loadR = () => { try { return JSON.parse(localStorage.getItem(EKEY) || '{}'); } catch (e) { return {}; } };
+const saveR = (o) => { try { localStorage.setItem(EKEY, JSON.stringify(o)); } catch (e) {} };
+function behaviourSummary(g) { const b = g.beh; return `Distractors in this group were selected on ${pct(b.all)} of attempts on average: ${pct(b.q1)} of attempts by the weakest quarter of learners and ${pct(b.q4)} by the strongest.`; }
+function evalExamples(g) { return citedOrder(g).slice(0, 5); }
+function renderEval() {
+  const g = G[S.ev.i]; const cond = S.ev.cond || 'linked'; const pid = S.ev.pid || '';
+  const R = loadR(); const key = `${pid || 'anon'}|${cond}|${g.id}`; const cur = R[key] || {};
+  const byId = Object.fromEntries(g.exemplars.map(e => [e.id, e]));
+  let claims;
+  if (cond === 'linked') claims = `<ol class="claims">${g.interp.claims.map(EvidenceLinkedClaim).join('')}</ol>`;
+  else if (g.unconstrained) claims = `<ol class="claims">${(g.unconstrained.claims || []).map(t => `<li class="claim">${esc(typeof t === 'string' ? t : t.text)}</li>`).join('')}</ol>`;
+  else claims = `<div class="notice">No unconstrained summary is loaded for ${g.id}. Add it to <code>review_unconstrained.json</code> (same structure: theme, summary, claims) and rebuild to run the unconstrained condition.</div>`;
+  const summary = cond === 'linked' ? g.interp.summary : (g.unconstrained ? g.unconstrained.summary : '');
+  const theme = cond === 'linked' ? g.interp.theme : (g.unconstrained ? g.unconstrained.theme : g.interp.theme);
+  return `<section class="panel evalbar">
+      <label>Rater ID <input id="pid" value="${esc(pid)}" size="10"></label>
+      <label>Condition <select id="cond"><option value="linked"${cond === 'linked' ? ' selected' : ''}>Evidence-linked</option><option value="unconstrained"${cond === 'unconstrained' ? ' selected' : ''}>Unconstrained</option></select></label>
+      <span style="font-size:13px;color:var(--muted)">Card ${S.ev.i + 1} of ${G.length}</span>
+      <span style="margin-left:auto;display:flex;gap:8px"><button class="btn" id="expjson" type="button">Export JSON</button><button class="btn" id="expcsv" type="button">Export CSV</button></span>
+    </section>
+    <section class="panel sec" style="margin-top:14px">
+      <div class="kicker">Candidate card ${g.id}</div>
+      <h2 style="margin-top:10px">Theme</h2><p class="summary" style="margin-bottom:10px">${esc(theme)}</p>
+      <h2>Summary</h2><p class="summary">${esc(summary || '–')}</p>
+      <h2 style="margin-bottom:8px">Claims</h2>${claims}
+      <h2 style="margin:18px 0 8px">Representative examples</h2>
+      <div class="evlist" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${evalExamples(g).map(id => ExemplarCard(byId[id], [])).join('')}</div>
+      <h2 style="margin:18px 0 6px">Behavioural summary</h2><p style="margin:0;font-size:15px">${esc(behaviourSummary(g))}</p>
+    </section>
+    <section class="panel sec" style="margin-top:14px"><h2 style="margin-bottom:10px">Ratings (1 = very poor, 5 = very good)</h2>
+      <div style="display:flex;flex-direction:column;gap:8px">${CRIT.map((c, ci) => `<div class="rating" role="radiogroup" aria-label="${c}"><span>${c}</span>${[1, 2, 3, 4, 5].map(v => `<input type="radio" name="c${ci}" id="c${ci}v${v}" value="${v}"${cur[c] == v ? ' checked' : ''}><label class="r" for="c${ci}v${v}">${v}</label>`).join('')}</div>`).join('')}</div>
+      <label style="display:block;margin-top:14px;font-size:13px;color:var(--muted)">Comment (optional)<textarea id="cmt" rows="3" style="display:block;width:100%;margin-top:4px;font:inherit;border:1px solid var(--line);border-radius:6px;padding:8px">${esc(cur.comment || '')}</textarea></label>
+      <div style="display:flex;gap:8px;margin-top:14px"><button class="btn" id="prev" type="button">Previous</button><button class="btn primary" id="next" type="button">Save and next</button><span id="saved" style="font-size:13px;color:var(--ok);align-self:center"></span></div>
+    </section>`;
+}
+function bindEval() {
+  const collect = () => { const g = G[S.ev.i]; const cond = S.ev.cond || 'linked'; const R = loadR(); const key = `${S.ev.pid || 'anon'}|${cond}|${g.id}`;
+    const o = {rater: S.ev.pid || 'anon', condition: cond, card: g.id, comment: document.getElementById('cmt').value, time: new Date().toISOString()};
+    CRIT.forEach((c, ci) => { const x = document.querySelector(`input[name=c${ci}]:checked`); o[c] = x ? +x.value : null; }); R[key] = o; saveR(R); };
+  document.getElementById('pid').onchange = e => { S.ev.pid = e.target.value.trim(); draw(); };
+  document.getElementById('cond').onchange = e => { collect(); S.ev.cond = e.target.value; draw(); };
+  document.getElementById('prev').onclick = () => { collect(); S.ev.i = (S.ev.i + G.length - 1) % G.length; draw(); window.scrollTo({top: 0}); };
+  document.getElementById('next').onclick = () => { collect(); S.ev.i = (S.ev.i + 1) % G.length; draw(); window.scrollTo({top: 0}); };
+  const dl = (name, text, type) => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], {type})); a.download = name; a.click(); };
+  document.getElementById('expjson').onclick = () => { collect(); dl('ratings.json', JSON.stringify(Object.values(loadR()), null, 1), 'application/json'); };
+  document.getElementById('expcsv').onclick = () => { collect(); const rows = Object.values(loadR()); const cols = ['rater', 'condition', 'card', ...CRIT, 'comment', 'time'];
+    dl('ratings.csv', [cols.join(','), ...rows.map(r => cols.map(c => `"${String(r[c] ?? '').replace(/"/g, '""')}"`).join(','))].join('\n'), 'text/csv'); };
+  document.querySelectorAll('.chip').forEach(ch => { const go = () => { document.querySelectorAll('.ex.lit').forEach(x => x.classList.remove('lit')); document.getElementById('ex-' + ch.dataset.e)?.classList.add('lit'); };
+    ch.addEventListener('mouseenter', go); ch.addEventListener('focus', go); ch.addEventListener('click', go); });
+}
+
+// ------------------------------------------------ render
+function draw() {
+  const main = document.getElementById('main');
+  main.innerHTML = S.v === 'compare' ? renderCompare() : S.v === 'eval' ? renderEval() : renderReview();
+  if (S.v === 'compare') bindCompare(); else if (S.v === 'eval') bindEval(); else bindReview();
+  document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', t.dataset.v === S.v));
+  renderSidebar(); writeHash();
+}
+function render() { draw(); }
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => { S.v = t.dataset.v; if (S.v === 'eval') S.ev.i = S.g; render(); window.scrollTo({top: 0}); });
+readHash(); if (S.v === 'eval') S.ev.i = S.g; render(); if (S.paper) paperExamples(G[S.g]).forEach(e => document.querySelectorAll(`.chip[data-e="${e}"]`).forEach(c => c.classList.add('on'))); if (S.hl) setTimeout(() => highlight(S.hl, null), 50);
+</script>
+</body>
+</html>
